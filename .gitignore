@@ -1,0 +1,48 @@
+# Node modules
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Debug & crash reports
+*.pid
+*.seed
+*.pid.lock
+pids
+report.[0-9]*.json
+
+# Runtime data
+*.tgz
+*.gz
+*.zip
+*.tar
+*.bak
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+
+# Build outputs
+dist/
+build/
+
+# IDE folders
+.vscode/
+.idea/
+
+# Misc
+.nyc_output/
+.cache/
