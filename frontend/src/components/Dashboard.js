@@ -23,16 +23,40 @@ export default function Dashboard({ token, onLogout }) {
   }, []);
 
   const fetchFiles = async () => {
+  try {
     const res = await fetch('http://localhost:5000/api/gallery/files', {
       headers: { Authorization: `Bearer ${token}` },
     });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        toast.error("Unauthorized. Please login again.");
+        if (onLogout) onLogout(); // Optional: force logout
+      } else {
+        toast.error("Failed to fetch files from server.");
+      }
+      return;
+    }
+
     const data = await res.json();
+
+    if (!data.files || !Array.isArray(data.files)) {
+      toast.error("Invalid response format from server.");
+      return;
+    }
+
     const processedFiles = data.files.map(f => ({
       ...f,
       uploadDate: new Date(f.uploadDate),
     }));
     setFiles(processedFiles);
-  };
+
+  } catch (err) {
+    console.error("Error fetching files:", err.message);
+    toast.error("Network error while fetching files.");
+  }
+};
+
 
   const handleUpload = async (e) => {
     const selectedFiles = Array.from(e.target.files);

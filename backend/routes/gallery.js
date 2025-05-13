@@ -22,7 +22,7 @@ const getVideoDuration = (buffer) => {
 
         ffmpeg(stream).ffprobe((err, data) => {
             if (err) return reject(err);
-            const duration = data.format.duration; // in seconds
+            const duration = data.format.duration;
             resolve(duration);
         });
     });
@@ -32,6 +32,12 @@ const getVideoDuration = (buffer) => {
 router.post('/upload', auth, upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).send('No file uploaded.');
     if (!req.user || !req.user.id) return res.status(401).send('User not authenticated.');
+
+    // Log bucket for debugging
+    if (!process.env.AWS_BUCKET_NAME) {
+        console.error("❌ AWS_BUCKET_NAME is not defined in .env");
+        return res.status(500).send("Server misconfiguration: Missing AWS_BUCKET_NAME.");
+    }
 
     const fileExtension = path.extname(req.file.originalname).toLowerCase();
     const allowedVideoExtensions = ['.mp4', '.mkv', '.webm', '.avi', '.mov', '.flv', '.3gp', '.mpeg'];
@@ -65,13 +71,17 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
             await newImage.save();
             res.status(200).json({ msg: 'Image uploaded successfully!', url: uploadResult.Location });
         } else {
-            const duration = await getVideoDuration(req.file.buffer);
+            const duration = await getVideoDuration(req.file.buffer).catch(err => {
+                console.error("❌ Failed to get video duration:", err.message);
+                return null;
+            });
+
             const newVideo = new Video({
                 userId: req.user.id,
                 fileName: req.file.originalname,
                 fileUrl: uploadResult.Location,
                 fileSize: req.file.size,
-                duration: Math.round(duration) // store as seconds
+                duration: duration ? Math.round(duration) : 0
             });
             await newVideo.save();
             res.status(200).json({ msg: 'Video uploaded successfully!', url: uploadResult.Location });
@@ -102,7 +112,7 @@ router.get('/files', auth, async (req, res) => {
                 url: vid.fileUrl,
                 fileName: vid.fileName,
                 fileSize: vid.fileSize,
-                duration: vid.duration, // include duration in response
+                duration: vid.duration,
                 fileId: vid._id,
                 uploadDate: vid.uploadDate
             }))
@@ -115,7 +125,7 @@ router.get('/files', auth, async (req, res) => {
     }
 });
 
-// Single Delete Route
+// Delete Single File
 router.delete('/delete/:fileId', auth, async (req, res) => {
     const { fileId } = req.params;
 
@@ -145,7 +155,7 @@ router.delete('/delete/:fileId', auth, async (req, res) => {
     }
 });
 
-// Multiple Delete Route
+// Delete Multiple Files
 router.post('/delete-multiple', auth, async (req, res) => {
     const { fileIds } = req.body;
 
@@ -179,7 +189,7 @@ router.post('/delete-multiple', auth, async (req, res) => {
     }
 });
 
-// Update File Route
+// Update File
 router.put('/update/:fileId', auth, upload.single('file'), async (req, res) => {
     const { fileId } = req.params;
 
@@ -195,22 +205,22 @@ router.put('/update/:fileId', auth, upload.single('file'), async (req, res) => {
             return res.status(404).json({ msg: 'File not found' });
         }
 
-        const fileUrl = image ? image.fileUrl : video.fileUrl;
-        const fileName = fileUrl.split('/').pop();
+        const oldFileUrl = image ? image.fileUrl : video.fileUrl;
+        const oldFileName = oldFileUrl.split('/').pop();
 
         await s3.deleteObject({
             Bucket: process.env.AWS_BUCKET_NAME,
-            Key: fileName
+            Key: oldFileName
         }).promise();
 
-        const uploadParams = {
+        const newUploadParams = {
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: `${Date.now()}_${req.file.originalname}`,
             Body: req.file.buffer,
             ContentType: req.file.mimetype
         };
 
-        const uploadResult = await s3.upload(uploadParams).promise();
+        const uploadResult = await s3.upload(newUploadParams).promise();
 
         if (image) {
             image.fileName = req.file.originalname;
@@ -219,11 +229,15 @@ router.put('/update/:fileId', auth, upload.single('file'), async (req, res) => {
             await image.save();
             res.status(200).json({ msg: 'Image updated successfully!', url: uploadResult.Location });
         } else if (video) {
-            const duration = await getVideoDuration(req.file.buffer);
+            const duration = await getVideoDuration(req.file.buffer).catch(err => {
+                console.error("❌ Failed to get video duration:", err.message);
+                return null;
+            });
+
             video.fileName = req.file.originalname;
             video.fileUrl = uploadResult.Location;
             video.fileSize = req.file.size;
-            video.duration = Math.round(duration);
+            video.duration = duration ? Math.round(duration) : 0;
             await video.save();
             res.status(200).json({ msg: 'Video updated successfully!', url: uploadResult.Location });
         }
