@@ -1,39 +1,42 @@
 import React, { useState } from 'react';
-import { UserPlus, Eye, EyeOff, LockKeyhole, Mail, UserRound } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Mail, LockKeyhole, UserRound } from 'lucide-react';
 
-export default function Register({ onRegisterSuccess, setPage }) {
-  const [name, setName] = useState('');
+export default function Login({ setToken, onSwitchToRegister }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleRegister = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+    
     setIsLoading(true);
     setError('');
     
     try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ email, password }),
       });
       
-      const data = await res.json();
-      
       if (res.ok) {
-        setIsLoading(false);
-        alert('Registration successful! Please log in.');
-        onRegisterSuccess();
+        const data = await res.json();
+        setToken(data.token);
       } else {
-        setIsLoading(false);
-        setError(data.message || 'Registration failed. Please try again.');
+        const errorData = await res.json().catch(() => ({}));
+        setError(errorData.message || 'Login failed. Please check your credentials.');
       }
     } catch (err) {
-      setIsLoading(false);
       setError('Connection error. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -51,7 +54,7 @@ export default function Register({ onRegisterSuccess, setPage }) {
         <div className="w-full max-w-md">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-4">Cloud Media Gallery</h1>
-            <p className="text-gray-400 text-lg">Upload, share, and enjoy your media anywhere.</p>
+            <p className="text-gray-400 text-lg">Access your personal media collection.</p>
           </div>
           
           <div className="bg-[#1e293b] rounded-xl p-5 mb-8">
@@ -60,8 +63,8 @@ export default function Register({ onRegisterSuccess, setPage }) {
                 <UserRound className="text-white" size={20} />
               </div>
               <div>
-                <h3 className="font-semibold text-white">Easy to Use</h3>
-                <p className="text-gray-400 text-sm">Simple interface to manage your photos and videos</p>
+                <h3 className="font-semibold text-white">Personalized Experience</h3>
+                <p className="text-gray-400 text-sm">Your collection, your way</p>
               </div>
             </div>
           </div>
@@ -72,8 +75,8 @@ export default function Register({ onRegisterSuccess, setPage }) {
                 <LockKeyhole className="text-white" size={20} />
               </div>
               <div>
-                <h3 className="font-semibold text-white">Secure Storage</h3>
-                <p className="text-gray-400 text-sm">Your media is safely stored on AWS S3</p>
+                <h3 className="font-semibold text-white">Secure Access</h3>
+                <p className="text-gray-400 text-sm">Your media is protected with modern security</p>
               </div>
             </div>
           </div>
@@ -83,9 +86,9 @@ export default function Register({ onRegisterSuccess, setPage }) {
       {/* Right Panel - Light Side with Form */}
       <div className="w-full md:w-1/2 bg-white flex items-center justify-center p-6">
         <div className="w-full max-w-md">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h2>
-            <p className="text-gray-500">Sign up to start your gallery journey</p>
+          <div className="mb-10">
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h2>
+            <p className="text-gray-500">Sign in to access your gallery</p>
           </div>
           
           {error && (
@@ -97,6 +100,7 @@ export default function Register({ onRegisterSuccess, setPage }) {
           {/* Google Sign In Button */}
           <button
             onClick={handleGoogleSignIn}
+            type="button"
             className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 border border-gray-300 rounded-lg shadow-sm transition mb-6"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -122,37 +126,19 @@ export default function Register({ onRegisterSuccess, setPage }) {
           
           <div className="relative flex items-center justify-center mb-6">
             <div className="border-t border-gray-300 w-full"></div>
-            <div className="absolute bg-white px-4 text-sm text-gray-500">or sign up with email</div>
+            <div className="absolute bg-white px-4 text-sm text-gray-500">or sign in with email</div>
           </div>
           
-          <form onSubmit={handleRegister} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="registerName">Full Name</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <UserRound className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="registerName"
-                  className="pl-10 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-900"
-                  placeholder="Enter your name"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  autoComplete="name"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="registerEmail">Email Address</label>
+              <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="loginEmail">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="registerEmail"
-                  className="pl-10 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-900"
+                  id="loginEmail"
+                  className="pl-10 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   placeholder="Enter your email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
@@ -164,19 +150,22 @@ export default function Register({ onRegisterSuccess, setPage }) {
             </div>
             
             <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="registerPassword">Password</label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-gray-700 text-sm font-medium" htmlFor="loginPassword">Password</label>
+                <button type="button" className="text-sm text-blue-600 hover:text-blue-800">Forgot password?</button>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <LockKeyhole className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="registerPassword"
-                  className="pl-10 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-900"
+                  id="loginPassword"
+                  className="pl-10 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Create a password"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  autoComplete="new-password"
+                  autoComplete="current-password"
                   required
                 />
                 <button
@@ -198,20 +187,21 @@ export default function Register({ onRegisterSuccess, setPage }) {
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
               ) : (
-                <UserPlus size={20} />
+                <LogIn size={20} />
               )}
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
           
           <div className="mt-8 text-center">
             <p className="text-gray-600">
-              Already have an account?{' '}
+              Don't have an account?{' '}
               <button
+                type="button"
                 className="text-blue-600 hover:text-blue-800 font-medium"
-                onClick={() => setPage('login')}
+                onClick={onSwitchToRegister}
               >
-                Log In
+                Create an account
               </button>
             </p>
           </div>
