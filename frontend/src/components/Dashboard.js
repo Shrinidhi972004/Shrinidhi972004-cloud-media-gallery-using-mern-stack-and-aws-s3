@@ -225,11 +225,11 @@ export default function Dashboard({ token, onLogout }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100 font-sans">
-      <div className="sticky top-0 z-10 bg-gray-900 bg-opacity-80 backdrop-blur-md shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-gray-800 font-sans">
+      <div className="sticky top-0 z-10 bg-white bg-opacity-80 backdrop-blur-md shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto p-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500">
               Immersive Gallery
             </h1>
           </div>
@@ -237,7 +237,7 @@ export default function Dashboard({ token, onLogout }) {
           <div className="flex items-center space-x-6">
             <button 
               onClick={() => fileInputRef.current.click()} 
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 px-4 py-2 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl active:scale-95"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 px-4 py-2 rounded-lg shadow-md text-white transition-all duration-200 hover:shadow-lg active:scale-95"
             >
               <Upload size={18} />
               <span>Upload</span>
@@ -252,7 +252,7 @@ export default function Dashboard({ token, onLogout }) {
             
             <button
               onClick={onLogout}
-              className="flex items-center gap-2 bg-red-500 hover:bg-red-600 active:scale-95 transition px-4 py-2 rounded-lg shadow-lg"
+              className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white active:scale-95 transition px-4 py-2 rounded-lg shadow-md"
             >
               <LogOut size={18} />
               <span>Logout</span>
@@ -263,19 +263,19 @@ export default function Dashboard({ token, onLogout }) {
 
       <div className="max-w-7xl mx-auto p-6">
         <div 
-          className="mb-8 border-2 border-dashed border-gray-600 rounded-xl p-10 text-center transition-all duration-200 cursor-pointer hover:border-blue-400 bg-gray-800 bg-opacity-50 hover:bg-opacity-70"
+          className="mb-8 border-2 border-dashed border-gray-300 rounded-xl p-10 text-center transition-all duration-200 cursor-pointer hover:border-blue-400 bg-white shadow-sm hover:bg-blue-50"
           onClick={() => fileInputRef.current.click()}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <Upload size={48} className="mx-auto mb-4 text-blue-400" />
-          <h3 className="text-xl font-semibold mb-2">Drag & Drop or Click to Upload</h3>
-          <p className="text-gray-400">Upload your images, videos, and files to the gallery</p>
+          <Upload size={48} className="mx-auto mb-4 text-blue-500" />
+          <h3 className="text-xl font-semibold mb-2 text-gray-800">Drag & Drop or Click to Upload</h3>
+          <p className="text-gray-500">Upload your images, videos, and files to the gallery</p>
           {uploading && (
             <div className="mt-4 flex items-center justify-center gap-2">
               <div className="animate-spin w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-              <span className="text-blue-400">Uploading files...</span>
+              <span className="text-blue-500">Uploading files...</span>
             </div>
           )}
         </div>
@@ -284,14 +284,14 @@ export default function Dashboard({ token, onLogout }) {
           <div className="flex gap-2">
             <button
               onClick={() => setLayout('grid')}
-              className={`p-2 rounded-lg transition ${layout === 'grid' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+              className={`p-2 rounded-lg transition shadow-sm ${layout === 'grid' ? 'bg-blue-500 text-white' : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'}`}
               title="Grid View"
             >
               <Grid size={20} />
             </button>
             <button
               onClick={() => setLayout('list')}
-              className={`p-2 rounded-lg transition ${layout === 'list' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+              className={`p-2 rounded-lg transition shadow-sm ${layout === 'list' ? 'bg-blue-500 text-white' : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'}`}
               title="List View"
             >
               <div className="w-5 h-5 flex flex-col justify-between">
@@ -307,10 +307,10 @@ export default function Dashboard({ token, onLogout }) {
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
-                className={`flex items-center gap-1 px-3 py-1 rounded-full transition shadow ${
+                className={`flex items-center gap-1 px-3 py-1 rounded-full transition shadow-sm ${
                   viewMode === mode 
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' 
-                    : 'bg-gray-700 hover:bg-gray-600'
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white' 
+                    : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
                 }`}
               >
                 {mode === 'day' && <Clock size={14} />}
@@ -325,7 +325,7 @@ export default function Dashboard({ token, onLogout }) {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleSelectAll}
-                className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-black px-3 py-1 rounded-lg shadow transition-all duration-200"
+                className="flex items-center gap-1 bg-amber-400 hover:bg-amber-500 text-gray-800 px-3 py-1 rounded-lg shadow-sm transition-all duration-200"
               >
                 <Check size={16} />
                 {selectedFiles.size === files.length ? 'Deselect All' : 'Select All'}
@@ -334,7 +334,7 @@ export default function Dashboard({ token, onLogout }) {
               {selectedFiles.size > 0 && (
                 <button
                   onClick={handleDeleteSelected}
-                  className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg shadow transition-all duration-200"
+                  className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg shadow-sm transition-all duration-200"
                 >
                   <Trash2 size={16} />
                   Delete ({selectedFiles.size})
@@ -345,7 +345,7 @@ export default function Dashboard({ token, onLogout }) {
         </div>
 
         {filteredFiles().length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-16 text-gray-500 bg-white rounded-xl shadow-sm border border-gray-200">
             <Image size={64} className="mb-4 opacity-50" />
             <p className="text-xl font-medium">No files to display</p>
             <p className="mt-2">Upload some files to get started</p>
@@ -355,7 +355,7 @@ export default function Dashboard({ token, onLogout }) {
             {filteredFiles().map(f => (
               <div
                 key={f.fileId}
-                className={`relative group rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition duration-200 transform hover:scale-105 ${
+                className={`relative group rounded-xl overflow-hidden shadow-sm hover:shadow-md bg-white transition duration-200 transform hover:scale-105 ${
                   selectedFiles.has(f.fileId) ? 'ring-2 ring-offset-2 ring-blue-500' : ''
                 }`}
               >
@@ -368,7 +368,7 @@ export default function Dashboard({ token, onLogout }) {
                     className={`w-8 h-8 flex items-center justify-center rounded-full ${
                       selectedFiles.has(f.fileId) 
                         ? 'bg-blue-500 text-white' 
-                        : 'bg-black bg-opacity-50 text-white hover:bg-blue-500'
+                        : 'bg-white bg-opacity-90 text-gray-700 border border-gray-200 hover:bg-blue-500 hover:text-white'
                     }`}
                   >
                     <Check size={16} className={selectedFiles.has(f.fileId) ? 'opacity-100' : 'opacity-0'} />
@@ -377,7 +377,7 @@ export default function Dashboard({ token, onLogout }) {
 
                 <div 
                   onClick={() => setSelectedFile(f)}
-                  className="w-full aspect-square bg-gray-800 cursor-pointer"
+                  className="w-full aspect-square bg-gray-100 cursor-pointer"
                 >
                   {f.type?.startsWith('image') ? (
                     <img
@@ -402,18 +402,18 @@ export default function Dashboard({ token, onLogout }) {
                       </span>
                     </div>
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gray-700">
-                      <File size={48} className="text-gray-400 mb-2" />
-                      <p className="truncate text-sm text-center w-full" title={f.fileName}>
+                    <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gray-100">
+                      <File size={48} className="text-gray-500 mb-2" />
+                      <p className="truncate text-sm text-center w-full text-gray-700" title={f.fileName}>
                         {f.fileName}
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="p-3 bg-gray-800">
-                  <p className="truncate font-medium" title={f.fileName}>{f.fileName}</p>
-                  <div className="flex justify-between items-center mt-1 text-xs text-gray-400">
+                <div className="p-3 bg-white border-t border-gray-100">
+                  <p className="truncate font-medium text-gray-800" title={f.fileName}>{f.fileName}</p>
+                  <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
                     <span>{formatFileSize(f.fileSize)}</span>
                     <span>{f.uploadDate.toLocaleDateString()}</span>
                   </div>
@@ -423,7 +423,7 @@ export default function Dashboard({ token, onLogout }) {
                         e.stopPropagation();
                         handleUpdateFile(f.fileId);
                       }}
-                      className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2 py-1 rounded transition"
+                      className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1 rounded transition"
                     >
                       <RefreshCw size={12} />
                       Update
@@ -441,56 +441,56 @@ export default function Dashboard({ token, onLogout }) {
             ))}
           </div>
         ) : (
-          <div className="bg-gray-800 rounded-xl overflow-hidden">
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-700 text-left">
+                <tr className="bg-gray-50 text-left border-b border-gray-200">
                   <th className="p-3 w-10"></th>
-                  <th className="p-3">File</th>
-                  <th className="p-3 hidden md:table-cell">Type</th>
-                  <th className="p-3 hidden sm:table-cell">Size</th>
-                  <th className="p-3 hidden lg:table-cell">Date</th>
-                  <th className="p-3">Actions</th>
+                  <th className="p-3 text-gray-700">File</th>
+                  <th className="p-3 hidden md:table-cell text-gray-700">Type</th>
+                  <th className="p-3 hidden sm:table-cell text-gray-700">Size</th>
+                  <th className="p-3 hidden lg:table-cell text-gray-700">Date</th>
+                  <th className="p-3 text-gray-700">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredFiles().map(f => (
                   <tr 
                     key={f.fileId} 
-                    className={`border-t border-gray-700 hover:bg-gray-700 transition cursor-pointer ${
-                      selectedFiles.has(f.fileId) ? 'bg-blue-900 bg-opacity-30' : ''
+                    className={`border-t border-gray-100 hover:bg-blue-50 transition cursor-pointer ${
+                      selectedFiles.has(f.fileId) ? 'bg-blue-50' : ''
                     }`}
                     onClick={() => setSelectedFile(f)}
                   >
                     <td className="p-3">
                       <div 
-                        className="w-6 h-6 rounded-md border border-gray-500 flex items-center justify-center cursor-pointer"
+                        className="w-6 h-6 rounded-md border border-gray-300 flex items-center justify-center cursor-pointer"
                         onClick={(e) => toggleSelectFile(f.fileId, e)}
                       >
-                        {selectedFiles.has(f.fileId) && <Check size={14} className="text-blue-400" />}
+                        {selectedFiles.has(f.fileId) && <Check size={14} className="text-blue-500" />}
                       </div>
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-3">
                         {f.type?.startsWith('image') ? (
-                          <div className="w-10 h-10 bg-gray-700 rounded overflow-hidden">
+                          <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden">
                             <img src={f.url} alt="" className="w-full h-full object-cover" />
                           </div>
                         ) : (
-                          <div className="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
+                          <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center text-gray-500">
                             {getFileIcon(f)}
                           </div>
                         )}
-                        <span className="font-medium truncate max-w-xs">{f.fileName}</span>
+                        <span className="font-medium truncate max-w-xs text-gray-800">{f.fileName}</span>
                       </div>
                     </td>
-                    <td className="p-3 hidden md:table-cell text-gray-400">
+                    <td className="p-3 hidden md:table-cell text-gray-600">
                       {f.type?.split('/')[0] || 'Unknown'}
                     </td>
-                    <td className="p-3 hidden sm:table-cell text-gray-400">
+                    <td className="p-3 hidden sm:table-cell text-gray-600">
                       {formatFileSize(f.fileSize)}
                     </td>
-                    <td className="p-3 hidden lg:table-cell text-gray-400">
+                    <td className="p-3 hidden lg:table-cell text-gray-600">
                       {f.uploadDate.toLocaleDateString()}
                     </td>
                     <td className="p-3">
@@ -499,7 +499,7 @@ export default function Dashboard({ token, onLogout }) {
                           e.stopPropagation();
                           handleUpdateFile(f.fileId);
                         }}
-                        className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2 py-1 rounded transition"
+                        className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1 rounded transition"
                       >
                         <RefreshCw size={12} />
                         Update
@@ -521,12 +521,12 @@ export default function Dashboard({ token, onLogout }) {
       </div>
 
       {selectedFile && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
           <div ref={fullscreenRef} className="relative w-full h-full flex items-center justify-center">
             <div className="absolute top-4 right-4 flex gap-4 z-50">
               {selectedFile.type?.startsWith('image') && (
                 <button
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-white transition"
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 transition"
                   onClick={handleFullscreen}
                   title="Toggle Fullscreen"
                 >
@@ -534,7 +534,7 @@ export default function Dashboard({ token, onLogout }) {
                 </button>
               )}
               <button
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-red-600 text-white transition"
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-white bg-opacity-90 hover:bg-red-500 hover:text-white text-gray-800 transition"
                 onClick={() => setSelectedFile(null)}
               >
                 <X size={20} />
@@ -556,17 +556,17 @@ export default function Dashboard({ token, onLogout }) {
                   className="max-w-full max-h-full object-contain"
                 />
               ) : (
-                <div className="bg-gray-800 p-8 rounded-xl max-w-md text-center">
-                  <File size={80} className="text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">{selectedFile.fileName}</h3>
-                  <p className="text-gray-400 mb-4">
+                <div className="bg-white p-8 rounded-xl max-w-md text-center shadow-lg">
+                  <File size={80} className="text-gray-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2 text-gray-800">{selectedFile.fileName}</h3>
+                  <p className="text-gray-600 mb-4">
                     {formatFileSize(selectedFile.fileSize)} • Uploaded on {selectedFile.uploadDate.toLocaleDateString()}
                   </p>
                   <a
                     href={selectedFile.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+                    className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition"
                   >
                     Open File
                   </a>
@@ -574,8 +574,8 @@ export default function Dashboard({ token, onLogout }) {
               )}
             </div>
             
-            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 bg-opacity-80 backdrop-blur-sm px-4 py-2 rounded-full">
-              <p className="text-center">{selectedFile.fileName}</p>
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-90 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
+              <p className="text-center text-gray-800">{selectedFile.fileName}</p>
             </div>
           </div>
         </div>

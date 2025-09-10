@@ -189,6 +189,42 @@ router.post('/delete-multiple', auth, async (req, res) => {
     }
 });
 
+// Update File Name
+router.put('/rename/:fileId', auth, async (req, res) => {
+    const { fileId } = req.params;
+    const { newFileName } = req.body;
+
+    if (!newFileName) {
+        return res.status(400).json({ msg: 'New file name is required' });
+    }
+
+    try {
+        let isImage = false;
+        let file = await Image.findById(fileId);
+        if (file) {
+            isImage = true;
+        } else {
+            file = await Video.findById(fileId);
+        }
+
+        if (!file) {
+            return res.status(404).json({ msg: 'File not found' });
+        }
+
+        // Only update the file name in the database, not in S3
+        file.fileName = newFileName;
+        await file.save();
+
+        res.status(200).json({ 
+            msg: 'File name updated successfully',
+            fileName: newFileName
+        });
+    } catch (err) {
+        console.error('Error updating file name:', err.message);
+        res.status(500).send('Server Error: Unable to update file name.');
+    }
+});
+
 // Update File
 router.put('/update/:fileId', auth, upload.single('file'), async (req, res) => {
     const { fileId } = req.params;
