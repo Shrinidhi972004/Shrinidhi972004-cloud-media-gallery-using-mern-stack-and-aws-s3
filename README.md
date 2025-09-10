@@ -204,7 +204,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 Shrinidhi - shrinidhiupadhyaya00@gmail.com
 
-Project Link: [https://github.com/Shrinidhi972004/Shrinidhi972004-cloud-media-gallery-using-mern-stack-and-aws-s3.git](https://github.com/Shrinidhi972004/cloud-media-gallery-using-mern-stack-and-aws-s3)
+Project Link: [https://github.com/Shrinidhi972004/Shrinidhi972004-cloud-media-gallery-using-mern-stack-and-aws-s3.git](https://github.com/Shrinidhi972004/Shrinidhi972004-cloud-media-gallery-using-mern-stack-and-aws-s3.git)
 
 ---
 
