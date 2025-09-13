@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const s3 = require('../config/awsConfig');
+const { Upload } = require('@aws-sdk/lib-storage');
+const { GetObjectCommand, DeleteObjectCommand, CopyObjectCommand } = require('@aws-sdk/client-s3');
+const s3Client = require('../config/awsConfig');
 const auth = require('../middlewares/authMiddleware');
+const { fileIdValidation, renameValidation, folderValidation, deleteMultipleValidation } = require('../middlewares/validation');
 const Image = require('../models/Image');
 const Video = require('../models/Video');
 const path = require('path');
@@ -51,6 +54,9 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
         return res.status(400).send('Unsupported file type.');
     }
 
+    // Folder support: get folder from body, default to '/'
+    const folder = req.body.folder || '/';
+
     const params = {
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: `${Date.now()}_${req.file.originalname}`,
@@ -59,14 +65,20 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     };
 
     try {
-        const uploadResult = await s3.upload(params).promise();
+        const upload = new Upload({
+            client: s3Client,
+            params: params
+        });
+        
+        const uploadResult = await upload.done();
 
         if (fileType === 'image') {
             const newImage = new Image({
                 userId: req.user.id,
                 fileName: req.file.originalname,
                 fileUrl: uploadResult.Location,
-                fileSize: req.file.size
+                fileSize: req.file.size,
+                folder
             });
             await newImage.save();
             res.status(200).json({ msg: 'Image uploaded successfully!', url: uploadResult.Location });
@@ -81,7 +93,8 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
                 fileName: req.file.originalname,
                 fileUrl: uploadResult.Location,
                 fileSize: req.file.size,
-                duration: duration ? Math.round(duration) : 0
+                duration: duration ? Math.round(duration) : 0,
+                folder
             });
             await newVideo.save();
             res.status(200).json({ msg: 'Video uploaded successfully!', url: uploadResult.Location });
@@ -92,11 +105,13 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     }
 });
 
-// Fetch Files Route
-router.get('/files', auth, async (req, res) => {
+// Fetch files, optionally filter by folder
+router.get('/files', auth, folderValidation, async (req, res) => {
     try {
-        const images = await Image.find({ userId: req.user.id });
-        const videos = await Video.find({ userId: req.user.id });
+        const folder = req.query.folder || '/';
+        // Fetch files in the current folder
+        const images = await Image.find({ userId: req.user.id, folder });
+        const videos = await Video.find({ userId: req.user.id, folder });
 
         const files = [
             ...images.map(img => ({
@@ -105,6 +120,7 @@ router.get('/files', auth, async (req, res) => {
                 fileName: img.fileName,
                 fileSize: img.fileSize,
                 fileId: img._id,
+                folder: img.folder,
                 uploadDate: img.uploadDate
             })),
             ...videos.map(vid => ({
@@ -114,11 +130,36 @@ router.get('/files', auth, async (req, res) => {
                 fileSize: vid.fileSize,
                 duration: vid.duration,
                 fileId: vid._id,
+                folder: vid.folder,
                 uploadDate: vid.uploadDate
             }))
         ];
 
-        res.json({ files });
+        // Find all unique subfolders directly under the current folder
+        // e.g. if currentFolder is '/', and a file has folder '/holiday', then 'holiday' is a subfolder
+        // if currentFolder is '/holiday', and a file has folder '/holiday/2024', then '2024' is a subfolder
+        const folderRegex = folder === '/'
+            ? new RegExp('^/([^/]+)')
+            : new RegExp('^' + folder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '/([^/]+)');
+
+        // Get all folders for this user
+        const allFoldersImages = await Image.find({ userId: req.user.id }, 'folder');
+        const allFoldersVideos = await Video.find({ userId: req.user.id }, 'folder');
+        const allFolders = [...allFoldersImages, ...allFoldersVideos].map(f => f.folder);
+
+        // Find unique subfolders directly under the current folder
+        const subfoldersSet = new Set();
+        for (const f of allFolders) {
+            if (f && f.startsWith(folder) && f !== folder) {
+                const match = f.replace(folder === '/' ? '' : folder, '').match(/^\/([^/]+)/);
+                if (match && match[1]) {
+                    subfoldersSet.add(match[1]);
+                }
+            }
+        }
+        const folders = Array.from(subfoldersSet);
+
+        res.json({ files, folders });
     } catch (error) {
         console.error('Error fetching files:', error.message);
         res.status(500).send('Server Error: Unable to fetch files.');
@@ -126,7 +167,7 @@ router.get('/files', auth, async (req, res) => {
 });
 
 // Delete Single File
-router.delete('/delete/:fileId', auth, async (req, res) => {
+router.delete('/delete/:fileId', auth, fileIdValidation, async (req, res) => {
     const { fileId } = req.params;
 
     try {
@@ -140,10 +181,10 @@ router.delete('/delete/:fileId', auth, async (req, res) => {
         const fileUrl = image ? image.fileUrl : video.fileUrl;
         const fileName = fileUrl.split('/').pop();
 
-        await s3.deleteObject({
+        await s3Client.send(new DeleteObjectCommand({
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: fileName
-        }).promise();
+        }));
 
         if (image) await Image.findByIdAndDelete(fileId);
         if (video) await Video.findByIdAndDelete(fileId);
@@ -156,7 +197,7 @@ router.delete('/delete/:fileId', auth, async (req, res) => {
 });
 
 // Delete Multiple Files
-router.post('/delete-multiple', auth, async (req, res) => {
+router.post('/delete-multiple', auth, deleteMultipleValidation, async (req, res) => {
     const { fileIds } = req.body;
 
     if (!Array.isArray(fileIds) || fileIds.length === 0) {
@@ -172,10 +213,10 @@ router.post('/delete-multiple', auth, async (req, res) => {
                 const fileUrl = image ? image.fileUrl : video.fileUrl;
                 const fileName = fileUrl.split('/').pop();
 
-                await s3.deleteObject({
+                await s3Client.send(new DeleteObjectCommand({
                     Bucket: process.env.AWS_BUCKET_NAME,
                     Key: fileName
-                }).promise();
+                }));
 
                 if (image) await Image.findByIdAndDelete(fileId);
                 if (video) await Video.findByIdAndDelete(fileId);
@@ -190,7 +231,7 @@ router.post('/delete-multiple', auth, async (req, res) => {
 });
 
 // Update File Name
-router.put('/rename/:fileId', auth, async (req, res) => {
+router.put('/rename/:fileId', auth, renameValidation, async (req, res) => {
     const { fileId } = req.params;
     const { newFileName } = req.body;
 
@@ -227,18 +268,18 @@ router.put('/rename/:fileId', auth, async (req, res) => {
         const newKey = prefix + newFileName;
 
         // Copy object to new key
-        await s3.copyObject({
+        await s3Client.send(new CopyObjectCommand({
             Bucket: process.env.AWS_BUCKET_NAME,
             CopySource: `${process.env.AWS_BUCKET_NAME}/${oldKey}`,
             Key: newKey,
             ContentType: file.type || undefined
-        }).promise();
+        }));
 
         // Delete old object
-        await s3.deleteObject({
+        await s3Client.send(new DeleteObjectCommand({
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: oldKey
-        }).promise();
+        }));
 
         // Update MongoDB
         file.fileName = newFileName;
@@ -260,7 +301,7 @@ router.put('/rename/:fileId', auth, async (req, res) => {
 });
 
 // Update File
-router.put('/update/:fileId', auth, upload.single('file'), async (req, res) => {
+router.put('/update/:fileId', auth, fileIdValidation, upload.single('file'), async (req, res) => {
     const { fileId } = req.params;
 
     if (!req.file) {
@@ -278,10 +319,10 @@ router.put('/update/:fileId', auth, upload.single('file'), async (req, res) => {
         const oldFileUrl = image ? image.fileUrl : video.fileUrl;
         const oldFileName = oldFileUrl.split('/').pop();
 
-        await s3.deleteObject({
+        await s3Client.send(new DeleteObjectCommand({
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: oldFileName
-        }).promise();
+        }));
 
         const newUploadParams = {
             Bucket: process.env.AWS_BUCKET_NAME,
@@ -290,7 +331,12 @@ router.put('/update/:fileId', auth, upload.single('file'), async (req, res) => {
             ContentType: req.file.mimetype
         };
 
-        const uploadResult = await s3.upload(newUploadParams).promise();
+        const upload = new Upload({
+            client: s3Client,
+            params: newUploadParams
+        });
+        
+        const uploadResult = await upload.done();
 
         if (image) {
             image.fileName = req.file.originalname;

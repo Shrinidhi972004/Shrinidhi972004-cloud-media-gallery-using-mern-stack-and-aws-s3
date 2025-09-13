@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Register from './components/Register';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const [token, setToken] = useState('');
@@ -29,11 +30,15 @@ function App() {
     }
   }, [token]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('gallery_token');
     setToken('');
     setPage('login');
-  };
+  }, []);
+
+  const handleSetToken = useCallback((newToken) => {
+    setToken(newToken);
+  }, []);
 
   // Initial loading screen
   if (loading) {
@@ -58,26 +63,30 @@ function App() {
 
   // Render the Dashboard if authenticated
   if (token) {
-    return <Dashboard token={token} onLogout={handleLogout} />;
+    return (
+      <ErrorBoundary>
+        <Dashboard token={token} onLogout={handleLogout} />
+      </ErrorBoundary>
+    );
   }
 
   // Auth screens (Login/Register)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-gray-100">
-      {page === 'login' ? (
-        <Login 
-          setToken={(newToken) => {
-            setToken(newToken);
-          }} 
-          onSwitchToRegister={() => setPage('register')} 
-        />
-      ) : (
-        <Register 
-          onRegisterSuccess={() => setPage('login')} 
-          setPage={setPage} 
-        />
-      )}
-    </div>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-gray-100">
+        {page === 'login' ? (
+          <Login 
+            setToken={handleSetToken}
+            onSwitchToRegister={() => setPage('register')} 
+          />
+        ) : (
+          <Register 
+            onRegisterSuccess={() => setPage('login')} 
+            setPage={setPage} 
+          />
+        )}
+      </div>
+    </ErrorBoundary>
   );
 }
 
