@@ -211,13 +211,47 @@ router.put('/rename/:fileId', auth, async (req, res) => {
             return res.status(404).json({ msg: 'File not found' });
         }
 
-        // Only update the file name in the database, not in S3
+        // Parse old S3 key from fileUrl
+        const oldUrl = file.fileUrl;
+        const urlParts = oldUrl.split('/');
+        const oldKey = decodeURIComponent(urlParts.slice(3).join('/'));
+        // S3 URL: https://<bucket>.s3.<region>.amazonaws.com/<key>
+
+        // New S3 key (keep timestamp prefix if present)
+        let prefix = '';
+        const oldName = file.fileName;
+        if (oldKey.includes('_')) {
+            prefix = oldKey.split('_')[0] + '_';
+        }
+        const ext = oldName.includes('.') ? oldName.substring(oldName.lastIndexOf('.')) : '';
+        const newKey = prefix + newFileName;
+
+        // Copy object to new key
+        await s3.copyObject({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            CopySource: `${process.env.AWS_BUCKET_NAME}/${oldKey}`,
+            Key: newKey,
+            ContentType: file.type || undefined
+        }).promise();
+
+        // Delete old object
+        await s3.deleteObject({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: oldKey
+        }).promise();
+
+        // Update MongoDB
         file.fileName = newFileName;
+        // Construct new S3 URL
+        const bucketRegion = process.env.AWS_REGION;
+        const bucketName = process.env.AWS_BUCKET_NAME;
+        file.fileUrl = `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${encodeURIComponent(newKey)}`;
         await file.save();
 
         res.status(200).json({ 
             msg: 'File name updated successfully',
-            fileName: newFileName
+            fileName: newFileName,
+            fileUrl: file.fileUrl
         });
     } catch (err) {
         console.error('Error updating file name:', err.message);
