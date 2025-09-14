@@ -15,7 +15,7 @@ export default function Register({ onRegisterSuccess, setPage }) {
     setError('');
     
     try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
+      const res = await fetch('http://localhost:5002/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -29,11 +29,18 @@ export default function Register({ onRegisterSuccess, setPage }) {
         onRegisterSuccess();
       } else {
         setIsLoading(false);
-        setError(data.message || 'Registration failed. Please try again.');
+        // Handle validation errors
+        if (data.errors && Array.isArray(data.errors)) {
+          const errorMessages = data.errors.map(err => err.msg).join(', ');
+          setError(errorMessages);
+        } else {
+          setError(data.msg || data.message || 'Registration failed. Please try again.');
+        }
       }
     } catch (err) {
       setIsLoading(false);
-      setError('Connection error. Please try again.');
+      console.error('Registration error:', err);
+      setError('Connection error. Please check if the server is running.');
     }
   };
 
