@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    container_name: image-gallery-backend
+    ports:
+      - "5002:5002"
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    build: ./frontend
+    container_name: image-gallery-frontend
+    ports:
+      - "9000:80"
+    depends_on:
+      - backend
