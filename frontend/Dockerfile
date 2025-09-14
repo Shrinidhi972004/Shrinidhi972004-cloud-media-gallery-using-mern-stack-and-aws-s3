@@ -6,8 +6,9 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install
 
-# Copy source and build React app
+# Copy source and .env, then build React app
 COPY . .
+COPY .env .env
 RUN npm run build
 
 # ---------- Production stage ----------

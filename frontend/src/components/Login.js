@@ -20,7 +20,8 @@ export default function Login({ setToken, onSwitchToRegister }) {
     setError('');
     
     try {
-      const res = await fetch('http://localhost:5002/api/auth/login', {
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
+  const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -45,7 +46,7 @@ export default function Login({ setToken, onSwitchToRegister }) {
     // In a real implementation, this would redirect to Google OAuth
     window.alert('Google Sign In would be implemented here with OAuth');
     // Typically, you'd redirect to something like:
-    // window.location.href = 'http://localhost:5000/api/auth/google';
+  // window.location.href = `${process.env.REACT_APP_API_URL}/api/auth/google`;
   };
 
   return (
