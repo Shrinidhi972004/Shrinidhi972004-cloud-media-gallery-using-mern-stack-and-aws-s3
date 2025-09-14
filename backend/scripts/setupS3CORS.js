@@ -16,9 +16,9 @@ const corsConfiguration = {
     CORSRules: [
         {
             AllowedOrigins: [
-                'http://localhost:3000',
+                'http://localhost:9000',
                 'http://localhost:3001',
-                process.env.FRONTEND_URL || 'http://localhost:3000'
+                process.env.FRONTEND_URL || 'http://localhost:9000'
             ].filter(Boolean),
             AllowedMethods: ['GET', 'PUT', 'POST', 'DELETE', 'HEAD'],
             AllowedHeaders: [

@@ -104,7 +104,7 @@ PORT=5002
 NODE_ENV=development
 
 # Frontend URL (for CORS)
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:9000
 ```
 
 ### 3. Set up the frontend
@@ -150,7 +150,7 @@ GENERATE_SOURCEMAP=false
   {
     "AllowedHeaders": ["*"],
     "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
-    "AllowedOrigins": ["http://localhost:3000", "http://localhost:5002"],
+    "AllowedOrigins": ["http://localhost:9000", "http://localhost:5002"],
     "ExposeHeaders": []
   }
 ]
@@ -169,10 +169,10 @@ node app.js
 ```bash
 cd frontend
 npm start
-# Frontend will run on http://localhost:3000
+# Frontend will run on http://localhost:9000
 ```
 
-The application will be available at **http://localhost:3000**
+The application will be available at **http://localhost:9000**
 
 ## 🐳 Docker Deployment
 
@@ -200,7 +200,7 @@ This will:
 
 ### User Registration & Login
 
-1. Access the application at **http://localhost:3000**
+1. Access the application at **http://localhost:9000**
 2. Choose "Create Account" to register a new user
 3. Use email/password authentication
 4. JWT tokens are used for secure session management
@@ -245,9 +245,9 @@ This will:
   - `POST /gallery/delete-multiple` - Delete multiple files
   - `PUT /gallery/rename/:fileId` - Rename a file
 
-### Frontend Development (Port 3000)
+### Frontend Development (Port 9000)
 
-**Development URL**: `http://localhost:3000`
+**Development URL**: `http://localhost:9000`
 
 - React 18 with modern hooks and functional components
 - Tailwind CSS for responsive styling

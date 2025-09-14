@@ -52,7 +52,7 @@ app.use(compression());
 
 // Other middleware
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:9000',
     credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -61,6 +61,25 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Default Route
 app.get('/', (req, res) => {
     res.send('Server is running successfully! 🚀');
+});
+
+// Health check endpoint for Docker
+app.get('/health', (req, res) => {
+    const healthCheck = {
+        uptime: process.uptime(),
+        message: 'OK',
+        timestamp: Date.now(),
+        environment: process.env.NODE_ENV,
+        memory: process.memoryUsage(),
+        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    };
+    
+    try {
+        res.status(200).json(healthCheck);
+    } catch (error) {
+        healthCheck.message = error;
+        res.status(503).json(healthCheck);
+    }
 });
 
 // Routes
