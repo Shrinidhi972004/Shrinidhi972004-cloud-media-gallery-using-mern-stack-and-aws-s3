@@ -10,94 +10,72 @@ const errorMiddleware = require('./middlewares/errorMiddleware');
 const validateEnvironment = require('./config/validateEnv');
 
 dotenv.config();
-
-// Validate environment variables before starting
 validateEnvironment();
 
 const app = express();
 
-// Security middleware
-app.use(helmet({
+app.use(
+  helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
-    contentSecurityPolicy: false // Disable for file uploads
-}));
+    contentSecurityPolicy: false,
+  })
+);
 
-// Rate limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.',
-    standardHeaders: true,
-    legacyHeaders: false,
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests, try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
 });
-app.use('/api/', limiter);
+app.use("/api/", limiter);
 
-// Upload specific rate limiting
 const uploadLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // limit each IP to 20 uploads per windowMs
-    message: 'Too many uploads from this IP, please try again later.',
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: "Too many uploads, try again later.",
 });
-app.use('/api/gallery/upload', uploadLimiter);
+app.use("/api/gallery/upload", uploadLimiter);
 
-// Logging
-if (process.env.NODE_ENV !== 'production') {
-    app.use(morgan('dev'));
-} else {
-    app.use(morgan('combined'));
-}
-
-// Compression
+app.use(morgan(process.env.NODE_ENV !== "production" ? "dev" : "combined"));
 app.use(compression());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:9000",
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Other middleware
-app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:9000',
-    credentials: true
-}));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.get("/", (req, res) => res.send("🚀 Server running successfully!"));
 
-// Default Route
-app.get('/', (req, res) => {
-    res.send('Server is running successfully! 🚀');
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    uptime: process.uptime(),
+    message: "OK",
+    timestamp: Date.now(),
+    environment: process.env.NODE_ENV,
+    memory: process.memoryUsage(),
+    database:
+      mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+  });
 });
 
-// Health check endpoint for Docker
-app.get('/health', (req, res) => {
-    const healthCheck = {
-        uptime: process.uptime(),
-        message: 'OK',
-        timestamp: Date.now(),
-        environment: process.env.NODE_ENV,
-        memory: process.memoryUsage(),
-        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-    };
-    
-    try {
-        res.status(200).json(healthCheck);
-    } catch (error) {
-        healthCheck.message = error;
-        res.status(503).json(healthCheck);
-    }
-});
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/gallery", require("./routes/gallery"));
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/gallery', require('./routes/gallery'));
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .catch((err) => {
+    console.error("❌ MongoDB Connection Failed:", err.message);
+    process.exit(1);
+  });
 
-// MongoDB Connection
-// Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('✅ Connected to MongoDB Atlas'))
-    .catch((err) => {
-        console.error('❌ MongoDB Atlas Connection Failed:', err.message);
-        process.exit(1);
-    });
+app.use(errorMiddleware);
 
-// Error Middleware (This should be placed after all routes and other middleware)
-app.use(errorMiddleware);  // This handles errors and sends the response
-
-// Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+const PORT = process.env.PORT || 5002;
+app.listen(PORT, () =>
+  console.log(`🚀 Backend running on http://localhost:${PORT}`)
+);
