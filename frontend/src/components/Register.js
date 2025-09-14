@@ -29,11 +29,18 @@ export default function Register({ onRegisterSuccess, setPage }) {
         onRegisterSuccess();
       } else {
         setIsLoading(false);
-        setError(data.message || 'Registration failed. Please try again.');
+        // Handle validation errors
+        if (data.errors && Array.isArray(data.errors)) {
+          const errorMessages = data.errors.map(err => err.msg).join(', ');
+          setError(errorMessages);
+        } else {
+          setError(data.msg || data.message || 'Registration failed. Please try again.');
+        }
       }
     } catch (err) {
       setIsLoading(false);
-      setError('Connection error. Please try again.');
+      console.error('Registration error:', err);
+      setError('Connection error. Please check if the server is running.');
     }
   };
 

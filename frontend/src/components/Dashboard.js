@@ -85,6 +85,7 @@ export default function Dashboard({ token, onLogout }) {
         ...f,
         uploadDate: f.uploadDate ? new Date(f.uploadDate) : new Date(),
       }));
+      console.log('Files with types:', normalized.map(f => ({ fileName: f.fileName, type: f.type })));
       setFiles(normalized);
       setFolders(Array.isArray(data.folders) ? data.folders : []);
       setSelectedFiles(new Set());
@@ -522,7 +523,7 @@ export default function Dashboard({ token, onLogout }) {
                           <span>{formatFileSize(f.fileSize)}</span>
                           <span>{(f.uploadDate instanceof Date ? f.uploadDate : new Date(f.uploadDate)).toLocaleDateString()}</span>
                         </div>
-                        <div className="mt-2 flex justify-between">
+                        <div className="mt-2 flex gap-1 flex-wrap">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -597,16 +598,18 @@ export default function Dashboard({ token, onLogout }) {
                     <td className="p-3 hidden sm:table-cell text-gray-600">{formatFileSize(f.fileSize)}</td>
                     <td className="p-3 hidden lg:table-cell text-gray-600">{(f.uploadDate instanceof Date ? f.uploadDate : new Date(f.uploadDate)).toLocaleDateString()}</td>
                     <td className="p-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleUpdateFile(f.fileId);
-                        }}
-                        className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1 rounded transition"
-                      >
-                        <RefreshCw size={12} />
-                        Update
-                      </button>
+                      <div className="flex gap-1 flex-wrap">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUpdateFile(f.fileId);
+                          }}
+                          className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1 rounded transition"
+                        >
+                          <RefreshCw size={12} />
+                          Update
+                        </button>
+                      </div>
                       <input type="file" accept="image/*,video/*" id={`update-input-${f.fileId}`} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, f.fileId)} />
                     </td>
                   </tr>
